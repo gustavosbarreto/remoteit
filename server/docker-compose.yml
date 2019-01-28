@@ -16,3 +16,11 @@ services:
     network_mode: host
     depends_on:
       - server
+  api:
+    build: api
+    depends_on:
+      - mongo
+    links:
+      - mongo
+  mongo:
+    image: mongo:3.4.19
