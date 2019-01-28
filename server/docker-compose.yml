@@ -1,19 +1,30 @@
-version: '3'
+version: '3.2'
 services:
   server:
     build: ssh-server
-    network_mode: host
     depends_on:
+      - emq
+    links:
       - emq
   emq:
     build: git://github.com/emqtt/emq-docker
-    network_mode: host
     environment:
      - EMQ_NAME=emq
      - EMQ_HOST=127.0.0.1
+     - EMQX_LOADED_PLUGINS=emq_auth_http
+     - EMQX_LOG__CONSOLE__LEVEL=debug
+     - EMQ_AUTH__HTTP__AUTH_REQ=http://api:8080/auth
+     - EMQ_AUTH__HTTP__AUTH_REQ__method=post
+     - EMQ_AUTH__HTTP__AUTH_REQ__params=username=%u,password=%P
+    links:
+      - api
+    ports:
+    - target: 1883
+      published: 1883
+      protocol: tcp
+      mode: host
   web:
     build: web
-    network_mode: host
     depends_on:
       - server
   api:

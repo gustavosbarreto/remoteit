@@ -11,7 +11,7 @@ import (
 func main() {
 	opts := &Options{
 		Addr:           ":2222",
-		Broker:         "tcp://localhost:1883",
+		Broker:         "tcp://emq:1883",
 		ConnectTimeout: 30 * time.Second,
 	}
 
