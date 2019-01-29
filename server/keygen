@@ -1,7 +1,8 @@
 #!/bin/sh
 
 SSH_SERVER_PRIVATE_KEY="ssh-server/private.key"
-API_SERVER_PRIVATE_KEY="api/private.key"
+API_SERVER_PRIVATE_KEY="api/key.pem"
+API_SERVER_PUBLIC_KEY="api/key.pub"
 
 function generate_ssh_server_private_key {
     if [ -f "$SSH_SERVER_PRIVATE_KEY" ]; then
@@ -20,11 +21,12 @@ function generate_api_server_private_key {
         echo "$API_SERVER_PRIVATE_KEY already exists"
         read -p "Are you sure you want to overwrite it? " -r
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            retrun
+            return
         fi
     fi
 
     openssl genrsa -out $API_SERVER_PRIVATE_KEY 4096
+    openssl rsa -in $API_SERVER_PRIVATE_KEY -pubout > $API_SERVER_PUBLIC_KEY
 }
 
 generate_ssh_server_private_key

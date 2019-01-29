@@ -13,8 +13,8 @@ services:
      - EMQ_HOST=127.0.0.1
      - EMQX_LOADED_PLUGINS=emq_auth_http
      - EMQX_LOG__CONSOLE__LEVEL=debug
-     - EMQ_AUTH__HTTP__AUTH_REQ=http://api:8080/auth
-     - EMQ_AUTH__HTTP__AUTH_REQ__method=post
+     - EMQ_AUTH__HTTP__AUTH_REQ=http://api:8080/mqtt/auth
+     - EMQ_AUTH__HTTP__AUTH_REQ__method=get
      - EMQ_AUTH__HTTP__AUTH_REQ__params=username=%u,password=%P
     links:
       - api
@@ -33,5 +33,10 @@ services:
       - mongo
     links:
       - mongo
+    ports:
+    - target: 8080
+      published: 8080
+      protocol: tcp
+      mode: host
   mongo:
     image: mongo:3.4.19

@@ -3,13 +3,14 @@ package main
 import (
 	"crypto/sha256"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/cnf/structhash"
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 	mgo "gopkg.in/mgo.v2"
 )
 
@@ -38,43 +39,75 @@ type Device struct {
 	Identity map[string]string `json:"identity"`
 }
 
+type AuthQuery struct {
+	Username string `query:"username"`
+	Password string `query:"password"`
+}
+
+type AuthClaims struct {
+	UID string `json:"uid"`
+
+	jwt.StandardClaims
+}
+
 func main() {
-	r := gin.Default()
+	e := echo.New()
+	e.Use(middleware.Logger())
 
 	session, err := mgo.Dial("mongodb://mongo:27017")
 	if err != nil {
 		panic(err)
 	}
 
-	r.Use(func(c *gin.Context) {
-		s := session.Clone()
+	signBytes, err := ioutil.ReadFile("key.pem")
+	if err != nil {
+		panic(err)
+	}
 
-		defer s.Close()
+	signKey, err := jwt.ParseRSAPrivateKeyFromPEM(signBytes)
+	if err != nil {
+		panic(err)
+	}
 
-		c.Set("db", s.DB("main"))
-		c.Next()
+	verifyBytes, err := ioutil.ReadFile("key.pub")
+	if err != nil {
+		panic(err)
+	}
+
+	verifyKey, err := jwt.ParseRSAPublicKeyFromPEM(verifyBytes)
+	if err != nil {
+		panic(err)
+	}
+
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			s := session.Clone()
+
+			defer s.Close()
+
+			c.Set("db", s.DB("main"))
+
+			return next(c)
+		}
 	})
 
-	r.POST("/auth", func(c *gin.Context) {
-		db := c.MustGet("db").(*mgo.Database)
+	e.POST("/auth", func(c echo.Context) error {
+		db := c.Get("db").(*mgo.Database)
 
 		var req AuthRequest
 
-		err := c.MustBindWith(&req, binding.JSON)
+		err := c.Bind(&req)
 		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
-			return
+			return err
 		}
 
 		switch req.GrantType {
 		case UserGrantType:
 			// TODO: not implemented yet
-			c.AbortWithError(http.StatusInternalServerError, errors.New("not implemented yet"))
-			return
+			return errors.New("not implemented yet")
 		case DeviceGrantType:
 		default:
-			c.AbortWithError(http.StatusInternalServerError, err)
-			return
+			return err
 		}
 
 		uid := sha256.Sum256(structhash.Dump(req.DeviceGrantData, 1))
@@ -85,30 +118,64 @@ func main() {
 		}
 
 		if err := db.C("devices").Insert(&d); err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
-			return
+			return err
 		}
 
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"uid": uid,
+		now := jwt.TimeFunc()
+
+		token := jwt.NewWithClaims(jwt.SigningMethodRS256, AuthClaims{
+			UID: string(uid[:]),
+
+			StandardClaims: jwt.StandardClaims{
+				NotBefore: now.Unix(),
+				IssuedAt:  now.Unix(),
+				Issuer:    "LetAuth",
+				Subject:   "All",
+			},
 		})
 
-		secretKey, err := ioutil.ReadFile("private.key")
+		signature, err := token.SignedString(signKey)
 		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
-			return
+			return err
 		}
 
-		signature, err := token.SignedString(secretKey)
-		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{
+		return c.JSON(http.StatusOK, echo.Map{
 			"token": signature,
 		})
 	})
 
-	r.Run()
+	e.GET("/mqtt/auth", func(c echo.Context) error {
+		q := AuthQuery{}
+
+		if err := c.Bind(&q); err != nil {
+			return err
+		}
+
+		if q.Username != "use-token-auth" {
+			return errors.New("Invalid username")
+		}
+
+		fmt.Println(q.Password)
+
+		token, err := jwt.ParseWithClaims(q.Password, &AuthClaims{}, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			}
+
+			return verifyKey, nil
+		})
+		if err != nil {
+			fmt.Println("Deu erro")
+			return err
+		}
+
+		if claims, ok := token.Claims.(AuthClaims); ok && token.Valid {
+			e.Logger.Info(claims)
+			return nil
+		}
+
+		return nil
+	})
+
+	e.Logger.Fatal(e.Start(":8080"))
 }
