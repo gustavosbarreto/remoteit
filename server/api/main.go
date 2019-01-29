@@ -2,9 +2,11 @@ package main
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 
 	"github.com/cnf/structhash"
@@ -42,12 +44,14 @@ type Device struct {
 type AuthQuery struct {
 	Username string `query:"username"`
 	Password string `query:"password"`
+	IPAddr   string `query:"ipaddr"`
 }
 
 type ACLQuery struct {
 	Access   string `query:"access"`
 	Username string `query:"username"`
 	Topic    string `query:"topic"`
+	IPAddr   string `query:"ipaddr"`
 }
 
 type AuthClaims struct {
@@ -61,6 +65,16 @@ func main() {
 	e.Use(middleware.Logger())
 
 	session, err := mgo.Dial("mongodb://mongo:27017")
+	if err != nil {
+		panic(err)
+	}
+
+	err = session.DB("main").C("devices").EnsureIndex(mgo.Index{
+		Key:        []string{"uid"},
+		Unique:     true,
+		Name:       "uid",
+		Background: false,
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -119,25 +133,16 @@ func main() {
 		uid := sha256.Sum256(structhash.Dump(req.DeviceGrantData, 1))
 
 		d := &Device{
-			UID:      string(uid[:]),
+			UID:      hex.EncodeToString(uid[:]),
 			Identity: req.DeviceGrantData.Identity,
 		}
 
-		if err := db.C("devices").Insert(&d); err != nil {
+		if err := db.C("devices").Insert(&d); err != nil && !mgo.IsDup(err) {
 			return err
 		}
 
-		now := jwt.TimeFunc()
-
 		token := jwt.NewWithClaims(jwt.SigningMethodRS256, AuthClaims{
 			UID: string(uid[:]),
-
-			StandardClaims: jwt.StandardClaims{
-				NotBefore: now.Unix(),
-				IssuedAt:  now.Unix(),
-				Issuer:    "LetAuth",
-				Subject:   "All",
-			},
 		})
 
 		signature, err := token.SignedString(signKey)
@@ -155,6 +160,16 @@ func main() {
 
 		if err := c.Bind(&q); err != nil {
 			return err
+		}
+
+		ipaddr, err := net.LookupIP("server")
+		if err != nil {
+			return err
+		}
+
+		// Authorize connection from internal ssh-server client
+		if q.IPAddr == ipaddr[0].String() {
+			return nil
 		}
 
 		if q.Username != "use-token-auth" {
