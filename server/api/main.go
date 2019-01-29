@@ -205,5 +205,16 @@ func main() {
 		return nil
 	})
 
+	e.POST("/mqtt/webhook", func(c echo.Context) error {
+		m := echo.Map{}
+		if err := c.Bind(&m); err != nil {
+			return err
+		}
+
+		fmt.Println(m)
+
+		return nil
+	})
+
 	e.Logger.Fatal(e.Start(":8080"))
 }
