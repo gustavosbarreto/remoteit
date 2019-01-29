@@ -11,7 +11,7 @@ services:
     environment:
      - EMQ_NAME=emq
      - EMQ_HOST=127.0.0.1
-     - EMQX_LOADED_PLUGINS=emq_auth_http
+     - EMQX_LOADED_PLUGINS=emq_dashboard,emq_auth_http
      - EMQX_LOG__CONSOLE__LEVEL=debug
      - EMQ_AUTH__HTTP__AUTH_REQ=http://api:8080/mqtt/auth
      - EMQ_AUTH__HTTP__AUTH_REQ__method=get
@@ -25,6 +25,10 @@ services:
     ports:
     - target: 1883
       published: 1883
+      protocol: tcp
+      mode: host
+    - target: 18083
+      published: 18083
       protocol: tcp
       mode: host
   web:
