@@ -44,6 +44,12 @@ type AuthQuery struct {
 	Password string `query:"password"`
 }
 
+type ACLQuery struct {
+	Access   string `query:"access"`
+	Username string `query:"username"`
+	Topic    string `query:"topic"`
+}
+
 type AuthClaims struct {
 	UID string `json:"uid"`
 
@@ -155,8 +161,6 @@ func main() {
 			return errors.New("Invalid username")
 		}
 
-		fmt.Println(q.Password)
-
 		token, err := jwt.ParseWithClaims(q.Password, &AuthClaims{}, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
@@ -165,13 +169,22 @@ func main() {
 			return verifyKey, nil
 		})
 		if err != nil {
-			fmt.Println("Deu erro")
 			return err
 		}
 
 		if claims, ok := token.Claims.(AuthClaims); ok && token.Valid {
 			e.Logger.Info(claims)
 			return nil
+		}
+
+		return nil
+	})
+
+	e.GET("/mqtt/acl", func(c echo.Context) error {
+		q := ACLQuery{}
+
+		if err := c.Bind(&q); err != nil {
+			return err
 		}
 
 		return nil
