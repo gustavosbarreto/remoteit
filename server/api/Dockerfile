@@ -4,7 +4,8 @@ RUN apk add --update git && \
     go get github.com/cnf/structhash && \
     go get github.com/dgrijalva/jwt-go && \
     go get github.com/labstack/echo && \
-    go get gopkg.in/mgo.v2
+    go get gopkg.in/mgo.v2 && \
+    go get github.com/mongodb/mongo-go-driver/bson
 
 ADD . /src
 

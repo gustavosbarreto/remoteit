@@ -8,12 +8,14 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/cnf/structhash"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type AuthRequest struct {
@@ -37,8 +39,10 @@ const (
 )
 
 type Device struct {
-	UID      string            `json:"device"`
+	ID       bson.ObjectId     `json:"-" bson:"_id,omitempty"`
+	UID      string            `json:"uid"`
 	Identity map[string]string `json:"identity"`
+	LastSeen time.Time         `json:"last_seen"`
 }
 
 type AuthQuery struct {
@@ -59,6 +63,22 @@ type AuthClaims struct {
 
 	jwt.StandardClaims
 }
+
+type WebHookEvent struct {
+	Action string `json:"action"`
+
+	WebHookClientEvent
+}
+
+type WebHookClientEvent struct {
+	ClientID string `json:"client_id"`
+	Username string `json:"username"`
+}
+
+const (
+	WebHookClientConnectedEventType    = "client_connected"
+	WebHookClientDisconnectedEventType = "client_disconnected"
+)
 
 func main() {
 	e := echo.New()
@@ -151,6 +171,7 @@ func main() {
 		}
 
 		return c.JSON(http.StatusOK, echo.Map{
+			"uid":   d.UID,
 			"token": signature,
 		})
 	})
@@ -170,10 +191,6 @@ func main() {
 		// Authorize connection from internal ssh-server client
 		if q.IPAddr == ipaddr[0].String() {
 			return nil
-		}
-
-		if q.Username != "use-token-auth" {
-			return errors.New("Invalid username")
 		}
 
 		token, err := jwt.ParseWithClaims(q.Password, &AuthClaims{}, func(token *jwt.Token) (interface{}, error) {
@@ -206,12 +223,32 @@ func main() {
 	})
 
 	e.POST("/mqtt/webhook", func(c echo.Context) error {
-		m := echo.Map{}
-		if err := c.Bind(&m); err != nil {
+		db := c.Get("db").(*mgo.Database)
+
+		evt := WebHookEvent{}
+
+		if err := c.Bind(&evt); err != nil {
 			return err
 		}
 
-		fmt.Println(m)
+		switch evt.Action {
+		case WebHookClientConnectedEventType:
+		default:
+			return nil
+		}
+
+		d := Device{}
+		err = db.C("devices").Find(bson.M{"uid": evt.WebHookClientEvent.Username}).One(&d)
+		if err != nil {
+			return err
+		}
+
+		d.LastSeen = time.Now()
+
+		_, err = db.C("devices").Upsert(bson.M{"uid": d.UID}, d)
+		if err != nil {
+			return err
+		}
 
 		return nil
 	})
