@@ -1,4 +1,4 @@
-version: '3.2'
+version: '3.6'
 services:
   server:
     build: ssh-server
@@ -37,7 +37,9 @@ services:
     depends_on:
       - server
   api:
-    build: api
+    build:
+      context: ./
+      dockerfile: ./api/Dockerfile
     depends_on:
       - mongo
     links:

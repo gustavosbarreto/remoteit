@@ -7,7 +7,7 @@ RUN apk add --update git && \
     go get gopkg.in/mgo.v2 && \
     go get github.com/mongodb/mongo-go-driver/bson
 
-ADD . /src
+ADD api /src
 
 RUN cd /src && go build -o api-server
 
@@ -17,7 +17,7 @@ WORKDIR /app
 
 COPY --from=build /src/api-server /app/
 
-ADD key.pub /app/key.pub
-ADD key.pem /app/key.pem
+ADD api/key.pub /app/key.pub
+ADD api/key.pem /app/key.pem
 
 ENTRYPOINT ./api-server

@@ -1,12 +1,11 @@
 package main
 
 import (
+	"crypto/rsa"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"time"
 
@@ -80,6 +79,8 @@ const (
 	WebHookClientDisconnectedEventType = "client_disconnected"
 )
 
+var verifyKey *rsa.PublicKey
+
 func main() {
 	e := echo.New()
 	e.Use(middleware.Logger())
@@ -114,7 +115,7 @@ func main() {
 		panic(err)
 	}
 
-	verifyKey, err := jwt.ParseRSAPublicKeyFromPEM(verifyBytes)
+	verifyKey, err = jwt.ParseRSAPublicKeyFromPEM(verifyBytes)
 	if err != nil {
 		panic(err)
 	}
@@ -176,82 +177,20 @@ func main() {
 		})
 	})
 
-	e.GET("/mqtt/auth", func(c echo.Context) error {
-		q := AuthQuery{}
-
-		if err := c.Bind(&q); err != nil {
-			return err
-		}
-
-		ipaddr, err := net.LookupIP("server")
-		if err != nil {
-			return err
-		}
-
-		// Authorize connection from internal ssh-server client
-		if q.IPAddr == ipaddr[0].String() {
-			return nil
-		}
-
-		token, err := jwt.ParseWithClaims(q.Password, &AuthClaims{}, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
-				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-			}
-
-			return verifyKey, nil
-		})
-		if err != nil {
-			return err
-		}
-
-		if claims, ok := token.Claims.(AuthClaims); ok && token.Valid {
-			e.Logger.Info(claims)
-			return nil
-		}
-
-		return nil
-	})
-
-	e.GET("/mqtt/acl", func(c echo.Context) error {
-		q := ACLQuery{}
-
-		if err := c.Bind(&q); err != nil {
-			return err
-		}
-
-		return nil
-	})
-
-	e.POST("/mqtt/webhook", func(c echo.Context) error {
+	e.GET("/devices", func(c echo.Context) error {
 		db := c.Get("db").(*mgo.Database)
 
-		evt := WebHookEvent{}
-
-		if err := c.Bind(&evt); err != nil {
-			return err
-		}
-
-		switch evt.Action {
-		case WebHookClientConnectedEventType:
-		default:
-			return nil
-		}
-
-		d := Device{}
-		err = db.C("devices").Find(bson.M{"uid": evt.WebHookClientEvent.Username}).One(&d)
-		if err != nil {
-			return err
-		}
-
-		d.LastSeen = time.Now()
-
-		_, err = db.C("devices").Upsert(bson.M{"uid": d.UID}, d)
-		if err != nil {
+		var devices []Device
+		if err := db.C("devices").Find(bson.M{}).All(&devices); err != nil {
 			return err
 		}
 
 		return nil
 	})
+
+	e.GET("/mqtt/auth", AuthenticateMqttClient)
+	e.GET("/mqtt/acl", AuthorizeMqttClient)
+	e.POST("/mqtt/webhook", ProcessMqttEvent)
 
 	e.Logger.Fatal(e.Start(":8080"))
 }
