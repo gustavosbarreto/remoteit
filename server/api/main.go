@@ -185,7 +185,7 @@ func main() {
 			return err
 		}
 
-		return nil
+		return c.JSON(http.StatusOK, devices)
 	})
 
 	e.GET("/mqtt/auth", AuthenticateMqttClient)

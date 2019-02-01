@@ -1,6 +1,6 @@
-FROM node:9.11.1-alpine
+FROM node:11.9.0-alpine
 
-RUN npm install -g http-server
+RUN npm install -g http-server python2
 
 WORKDIR /app
 
@@ -13,4 +13,4 @@ COPY . .
 RUN npm run build
 
 EXPOSE 8080
-CMD [ "http-server", "dist" ]
+CMD [ "http-server", "-c-1", "dist" ]
