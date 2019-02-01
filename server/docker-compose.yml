@@ -49,5 +49,12 @@ services:
       published: 8080
       protocol: tcp
       mode: host
+  gateway:
+    build: gateway
+    depends_on:
+      - api
+      - ui
+    ports:
+      - '80:80'
   mongo:
     image: mongo:3.4.19
