@@ -29,7 +29,10 @@ func NewServer(opts *Options) *Server {
 	}
 
 	s.sshd = &sshserver.Server{
-		Addr:             opts.Addr,
+		Addr: opts.Addr,
+		PasswordHandler: func(ctx sshserver.Context, pass string) bool {
+			return true
+		},
 		PublicKeyHandler: s.publicKeyHandler,
 		Handler:          s.sessionHandler,
 		ReversePortForwardingCallback: s.reversePortForwardingHandler,

@@ -6,6 +6,8 @@ services:
       - emq
     links:
       - emq
+    ports:
+      - "2222:2222"
   emq:
     build: git://github.com/emqtt/emq-docker
     environment:
@@ -49,6 +51,12 @@ services:
       published: 8080
       protocol: tcp
       mode: host
+  term:
+    build: term-ws
+    depends_on:
+      - server
+    links:
+      - server
   ui:
     build: ui
   gateway:
@@ -57,6 +65,7 @@ services:
     depends_on:
       - api
       - ui
+      - term
     ports:
       - '80:80'
   mongo:
