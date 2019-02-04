@@ -1,0 +1,8 @@
+version: '3.6'
+services:
+  ui:
+    build:
+      context: ./
+      dockerfile: ./ui/Dockerfile.dev
+    volumes:
+      - ./ui:/app

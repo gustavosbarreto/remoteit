@@ -1,3 +1,9 @@
 module.exports = {
-    publicPath: '/ui'
+    baseUrl: '/',
+    devServer: {
+        disableHostCheck: true,
+        headers: {
+            "Access-Control-Allow-Origin": "*"
+        }
+    }
 }

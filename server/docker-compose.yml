@@ -53,6 +53,7 @@ services:
     build: ui
   gateway:
     build: gateway
+    command: [nginx-debug, '-g', 'daemon off;']
     depends_on:
       - api
       - ui

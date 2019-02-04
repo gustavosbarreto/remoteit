@@ -1,0 +1,11 @@
+FROM node:11.9.0-alpine
+
+RUN npm install -g @vue/cli
+
+WORKDIR /app
+
+RUN npm install
+
+EXPOSE 8080
+
+CMD ["npm", "run", "serve"]

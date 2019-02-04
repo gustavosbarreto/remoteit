@@ -1,14 +1,16 @@
 <template>
-  <v-container>{{ devices }}</v-container>
+  <v-container>ae</v-container>
 </template>
 
 <script>
 export default {
-  data: () => {
-    devices: []
+  data() {
+    return {
+      devices: []
+    };
   },
-  mounted() {
-    this.devices = await this.$http.get('/devices');
+  async mounted() {
+    this.devices = await this.$http.get("/api/devices");
   }
 };
 </script>
