@@ -15,7 +15,7 @@
             </v-layout>
           </v-card-actions>
 
-          <div id="terminal" ref="terminal"></div>
+          <div class="terminal" ref="terminal"></div>
         </v-card>
       </v-expansion-panel-content>
     </v-expansion-panel>
@@ -83,5 +83,9 @@ code {
 
 code::before {
   content: "";
+}
+
+.terminal {
+  margin: 20px;
 }
 </style>
