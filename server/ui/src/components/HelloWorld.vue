@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-expansion-panel>
-      <v-expansion-panel-content v-for="(device, i) in devices" :key="device.uid">
+      <v-expansion-panel-content v-for="(device, index) in devices" :key="device.uid">
         <div slot="header">{{ device.uid }}</div>
         <v-card>
           <v-card-text>
@@ -11,7 +11,7 @@
           <v-card-actions>
             <v-layout align-center justify-end>
               <v-card-text class="grey--text darken-1">Ultima vez online: {{ device.last_seen }}</v-card-text>
-              <v-btn flat color="orange" @click="openTerminal(i)">Open Terminal</v-btn>
+              <v-btn flat color="orange" @click="openTerminal(device, index)">Open Terminal</v-btn>
             </v-layout>
           </v-card-actions>
 
@@ -47,7 +47,7 @@ export default {
       });
     },
 
-    openTerminal(index) {
+    openTerminal(device, index) {
       const xterm = new Terminal({
         cursorBlink: true,
         fontFamily: "monospace"
@@ -57,17 +57,23 @@ export default {
       xterm.focus();
       xterm.fit();
 
-      var ws = new WebSocket(
-        "ws://" +
-          location.host +
-          "/term/ws?user=gustavo@79412d37892ec50b79d2c17fcb311c5db9dc262429b46f8d3925fa20c2392533"
-      );
+      const params = Object.entries({
+        user: `gustavo@${device.uid}`,
+        cols: xterm.cols,
+        rows: xterm.rows
+      })
+        .map(([k, v]) => {
+          return `${k}=${v}`;
+        })
+        .join("&");
+
+      var ws = new WebSocket(`ws://${location.host}/term/ws?${params}`);
 
       ws.onmessage = function(e) {
         xterm.write(e.data);
       };
 
-      xterm.on("data", function(data) {
+      xterm.on("data", data => {
         ws.send(data);
       });
     }

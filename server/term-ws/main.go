@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strconv"
 
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/net/websocket"
@@ -19,6 +20,8 @@ func copyWorker(dst io.Writer, src io.Reader, doneCh chan<- bool) {
 func relayHandler(ws *websocket.Conn) {
 	user := ws.Request().URL.Query().Get("user")
 	passwd := ws.Request().URL.Query().Get("passwd")
+	cols, _ := strconv.Atoi(ws.Request().URL.Query().Get("cols"))
+	rows, _ := strconv.Atoi(ws.Request().URL.Query().Get("rows"))
 
 	config := &ssh.ClientConfig{
 		User: user,
@@ -64,7 +67,7 @@ func relayHandler(ws *websocket.Conn) {
 		return
 	}
 
-	if err := session.RequestPty("xterm", 40, 80, modes); err != nil {
+	if err := session.RequestPty("xterm", rows, cols, modes); err != nil {
 		session.Close()
 		ws.Close()
 		return
