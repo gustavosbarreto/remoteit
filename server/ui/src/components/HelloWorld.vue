@@ -2,7 +2,12 @@
   <v-container>
     <v-expansion-panel>
       <v-expansion-panel-content v-for="(device, index) in devices" :key="device.uid">
-        <div slot="header">{{ device.uid }}</div>
+        <div slot="header">
+          <v-label>
+            <v-icon>developer_board</v-icon>
+            {{ device.uid }}
+          </v-label>
+        </div>
         <v-card>
           <v-card-text>
             <code>{{ JSON.stringify(device.identity, null, 4) }}</code>
