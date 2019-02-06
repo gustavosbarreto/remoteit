@@ -29,7 +29,8 @@ type UserGrantData struct {
 }
 
 type DeviceGrantData struct {
-	Identity map[string]string `json:"identity"`
+	Identity  map[string]string `json:"identity"`
+	PublicKey string            `json:"public_key"`
 }
 
 const (
@@ -38,10 +39,11 @@ const (
 )
 
 type Device struct {
-	ID       bson.ObjectId     `json:"-" bson:"_id,omitempty"`
-	UID      string            `json:"uid"`
-	Identity map[string]string `json:"identity"`
-	LastSeen time.Time         `json:"last_seen"`
+	ID        bson.ObjectId     `json:"-" bson:"_id,omitempty"`
+	UID       string            `json:"uid"`
+	Identity  map[string]string `json:"identity"`
+	PublicKey string            `json:"public_key" bson:"public_key"`
+	LastSeen  time.Time         `json:"last_seen"`
 }
 
 type AuthQuery struct {
@@ -154,8 +156,9 @@ func main() {
 		uid := sha256.Sum256(structhash.Dump(req.DeviceGrantData, 1))
 
 		d := &Device{
-			UID:      hex.EncodeToString(uid[:]),
-			Identity: req.DeviceGrantData.Identity,
+			UID:       hex.EncodeToString(uid[:]),
+			Identity:  req.DeviceGrantData.Identity,
+			PublicKey: req.DeviceGrantData.PublicKey,
 		}
 
 		if err := db.C("devices").Insert(&d); err != nil && !mgo.IsDup(err) {
