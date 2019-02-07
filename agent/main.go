@@ -7,7 +7,6 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"net/url"
 	"os"
 	"os/exec"
 	"strconv"
@@ -17,8 +16,8 @@ import (
 	"github.com/coreos/go-systemd/journal"
 	"github.com/coreos/go-systemd/sdjournal"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/gorilla/websocket"
 	shellwords "github.com/mattn/go-shellwords"
+	"github.com/parnurzeal/gorequest"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -57,12 +56,6 @@ func main() {
 	}
 
 	j, err := sdjournal.NewJournal()
-
-	u := url.URL{Scheme: "ws", Host: "localhost", Path: "/log/ws"}
-	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
-	if err != nil {
-		panic(err)
-	}
 
 	state := &JournalState{}
 
@@ -122,8 +115,9 @@ func main() {
 
 			l.Level = levels[journal.Priority(level)]
 
-			err = c.WriteJSON(l)
-			if err != nil {
+			request := gorequest.New()
+			_, _, errs := request.Post("http://localhost/log/log").Send(l).End()
+			if len(errs) > 0 {
 				j.Previous()
 				continue
 			}
