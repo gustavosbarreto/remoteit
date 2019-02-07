@@ -2,19 +2,29 @@ package main
 
 import (
 	"bytes"
+	"encoding/gob"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
+	"net/url"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/coreos/go-systemd/sdjournal"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/gorilla/websocket"
 	shellwords "github.com/mattn/go-shellwords"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
+
+type JournalState struct {
+	Timestamp time.Time
+}
 
 func main() {
 	var rootCmd = &cobra.Command{
@@ -44,6 +54,72 @@ func main() {
 	if helpCalled {
 		os.Exit(1)
 	}
+
+	journal, err := sdjournal.NewJournal()
+
+	u := url.URL{Scheme: "ws", Host: "localhost", Path: "/log/ws"}
+	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	if err != nil {
+		panic(err)
+	}
+
+	state := &JournalState{}
+
+	b, err := ioutil.ReadFile("state.dat")
+	if err == nil {
+		r := bytes.NewReader(b)
+		dec := gob.NewDecoder(r)
+		dec.Decode(state)
+	}
+
+	if !state.Timestamp.IsZero() {
+		journal.SeekRealtimeUsec(uint64(state.Timestamp.UnixNano()))
+	}
+
+	go func() {
+		for {
+			n, err := journal.Next()
+			if err != nil && err != io.EOF {
+				panic(err)
+			}
+
+			if n < 1 {
+				// no new entry
+				journal.Wait(sdjournal.IndefiniteWait)
+				continue
+			}
+
+			entry, err := journal.GetEntry()
+			if err != nil {
+				panic(err)
+			}
+
+			var l struct {
+				Message   string    `json:"message"`
+				Timestamp time.Time `json:"timestamp"`
+			}
+
+			l.Message = entry.Fields[sdjournal.SD_JOURNAL_FIELD_MESSAGE]
+			l.Timestamp = time.Unix(0, int64(entry.RealtimeTimestamp))
+
+			err = c.WriteJSON(l)
+			if err != nil {
+				journal.Previous()
+				continue
+			}
+
+			state.Timestamp = l.Timestamp
+
+			var buf bytes.Buffer
+			enc := gob.NewEncoder(&buf)
+
+			enc.Encode(state)
+
+			ioutil.WriteFile("state.dat", buf.Bytes(), 0644)
+
+			time.Sleep(time.Millisecond * 100)
+		}
+	}()
 
 	cmds := make(map[int]*exec.Cmd)
 

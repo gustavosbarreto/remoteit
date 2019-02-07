@@ -46,17 +46,14 @@ services:
       - mongo
     links:
       - mongo
-    ports:
-    - target: 8080
-      published: 8080
-      protocol: tcp
-      mode: host
   term:
     build: term-ws
     depends_on:
       - server
     links:
       - server
+  log:
+    build: log-ws
   ui:
     build: ui
   gateway:
