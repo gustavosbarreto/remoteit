@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/coreos/go-systemd/journal"
 	"github.com/coreos/go-systemd/sdjournal"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gorilla/websocket"
@@ -55,7 +56,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	journal, err := sdjournal.NewJournal()
+	j, err := sdjournal.NewJournal()
 
 	u := url.URL{Scheme: "ws", Host: "localhost", Path: "/log/ws"}
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
@@ -73,23 +74,23 @@ func main() {
 	}
 
 	if !state.Timestamp.IsZero() {
-		journal.SeekRealtimeUsec(uint64(state.Timestamp.UnixNano()))
+		j.SeekRealtimeUsec(uint64(state.Timestamp.UnixNano()))
 	}
 
 	go func() {
 		for {
-			n, err := journal.Next()
+			n, err := j.Next()
 			if err != nil && err != io.EOF {
 				panic(err)
 			}
 
 			if n < 1 {
 				// no new entry
-				journal.Wait(sdjournal.IndefiniteWait)
+				j.Wait(sdjournal.IndefiniteWait)
 				continue
 			}
 
-			entry, err := journal.GetEntry()
+			entry, err := j.GetEntry()
 			if err != nil {
 				panic(err)
 			}
@@ -97,14 +98,33 @@ func main() {
 			var l struct {
 				Message   string    `json:"message"`
 				Timestamp time.Time `json:"timestamp"`
+				Level     string    `json:"level"`
 			}
 
 			l.Message = entry.Fields[sdjournal.SD_JOURNAL_FIELD_MESSAGE]
-			l.Timestamp = time.Unix(0, int64(entry.RealtimeTimestamp))
+			l.Timestamp = time.Unix(0, int64(entry.RealtimeTimestamp*1000))
+
+			level, err := strconv.Atoi(entry.Fields[sdjournal.SD_JOURNAL_FIELD_PRIORITY])
+			if err != nil {
+				panic(err)
+			}
+
+			levels := map[journal.Priority]string{
+				journal.PriEmerg:   "emerg",
+				journal.PriAlert:   "alert",
+				journal.PriCrit:    "crit",
+				journal.PriErr:     "err",
+				journal.PriWarning: "warning",
+				journal.PriNotice:  "notice",
+				journal.PriInfo:    "info",
+				journal.PriDebug:   "debug",
+			}
+
+			l.Level = levels[journal.Priority(level)]
 
 			err = c.WriteJSON(l)
 			if err != nil {
-				journal.Previous()
+				j.Previous()
 				continue
 			}
 

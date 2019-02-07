@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -24,7 +25,9 @@ func relayHandler(w http.ResponseWriter, r *http.Request) {
 
 	for {
 		var msg struct {
-			Message string `json:"message"`
+			Message   string    `json:"message"`
+			Timestamp time.Time `json:"timestamp"`
+			Level     string    `json:"level"`
 		}
 
 		err = conn.ReadJSON(&msg)
@@ -32,7 +35,7 @@ func relayHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		fmt.Println(msg.Message)
+		fmt.Println(msg)
 	}
 }
 
