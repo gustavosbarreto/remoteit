@@ -74,7 +74,7 @@ func main() {
 	}
 
 	if !state.Timestamp.IsZero() {
-		j.SeekRealtimeUsec(uint64(state.Timestamp.UnixNano()))
+		j.SeekRealtimeUsec(uint64(state.Timestamp.UnixNano() / 1000))
 	}
 
 	go func() {
