@@ -89,17 +89,19 @@ func main() {
 			}
 
 			var l struct {
+				Device    string    `json:"device"`
 				Message   string    `json:"message"`
 				Timestamp time.Time `json:"timestamp"`
 				Level     string    `json:"level"`
 			}
 
+			l.Device = deviceID
 			l.Message = entry.Fields[sdjournal.SD_JOURNAL_FIELD_MESSAGE]
 			l.Timestamp = time.Unix(0, int64(entry.RealtimeTimestamp*1000))
 
 			level, err := strconv.Atoi(entry.Fields[sdjournal.SD_JOURNAL_FIELD_PRIORITY])
 			if err != nil {
-				panic(err)
+				continue
 			}
 
 			levels := map[journal.Priority]string{
@@ -115,12 +117,15 @@ func main() {
 
 			l.Level = levels[journal.Priority(level)]
 
+			fmt.Println("ante")
 			request := gorequest.New()
-			_, _, errs := request.Post("http://localhost/log/log").Send(l).End()
+			_, _, errs := request.Post(fmt.Sprintf("http://%s/log/log", sshServer)).Send(l).End()
 			if len(errs) > 0 {
+				fmt.Println(errs)
 				j.Previous()
 				continue
 			}
+			fmt.Println("mando")
 
 			state.Timestamp = l.Timestamp
 
@@ -141,7 +146,7 @@ func main() {
 
 	opts := mqtt.NewClientOptions().AddBroker(fmt.Sprintf("tcp://%s", mqttServer))
 	opts.SetUsername(deviceID)
-	opts.SetPassword("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJcdWZmZmR8XHVmZmZkXHVmZmZkXHUwMDBlMn9cdWZmZmRcdWZmZmRcdWZmZmRcdWZmZmRcdWZmZmQuXHUwMDEza1x1ZmZmZFx1ZmZmZFx1ZmZmZFxuXHVmZmZkXHUwMDNjXHVmZmZkXHVmZmZkRFx1ZmZmZFx1ZmZmZDhcdWZmZmTUkFx1MDAwMzYifQ.npbhjNu0b8gkFYx59GxAyDDN2nSAq6oS1Qxt3Quvb3cfLaWVpyE0RxkkAOo7lvwgb6rEQC4qjpmQx-K95ZOM76jC1O3v3370MNn5lgV4Dk5UGlJ5Yotfhc2LQIujotFcA1ha1KyvCVaOf2s-y0OkK0O188XeXsS4D5zFILR7JnbiIRkdVh1TBDLGA2JHRiemIN4QXPvxeybZFARNZaRKTcrdaqr5VUbZn7lh_VOyfP9NdMQzBEsF2AQuIcYbE9JebmBO_TEdZWLiMexnorT6iGW506qk8dhpBS_LQYszGulVgfwQ7s18Yh_WdZYCzwErfAf2JA330eiOY7p6rH02cUGW6fBpbUG-TuAGMftlKQTrpyS1yQtEhUNKiJ8hKkEOkEy1tdmF5-CfDOWJKlpTg0wzhZSraXSiXPZA33BoyC2ZIEORE8GN5yUO2vCY8DiqNHVBlaK8e1Ti7DCdjm-Es8PVGjfpTHTmQFlbatEuLy2sLj3t7MrO_Drofcn9sBp9iT-l1Pm-Zj_VNunjp_MnoNfet0MfOwz7CPZ3tFRWPZCCTtHSj2zEBm2fmYOfFWuc6o9EYuHtKGD-v_0W5cw3kmWpMZYalhMHbOrAcLwQYiBHMdW4UoZNQSKKHfGk80EIHvWzwM9Xaf_HRDk3XZVK6uYf0yHA1gv_9SZ_SQTZFuo")
+	opts.SetPassword("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJcdTAwMGZcdWZmZmR2XHVmZmZkNVx1ZmZmZDosdSBcdTAwMDJcdTAwMTZoXHVmZmZkXG5cdWZmZmQvdFx1ZmZmZF9cdWZmZmTOrFx1MDAwY0ZcdWZmZmRBXHVmZmZkXHVmZmZkV1x1ZmZmZFx1ZmZmZCJ9.bGYYDBUomMVLjlPerdWq6KZIWPTssxm989jMnQx27zN2Z4vz1lXV_82YeARwxmHvyEg9C96sMgRVogftDA9m0zc0Hj3ozdVBq-bFBYbrDDwYlsxtL9l7OS8lBrPAMF2UWMB8aomNw3rnuSikfKtk2IVDo9tRQxGw4_J-xywa8GkZ1gjB6gwlS-rBv9liNGtcIDrmmfZ6rI5GMBLEFFh9m_2J1dlQ_EISpsc-TynrcnmrO_3stlP37SMk4JwUzZEQQRzuYGpoAlx8Xounf38O01UGgjkcyPg0Gf2ihxffIgCnd3Hs0WEPNIdHh6y-SJ81kx9D9-FLRwgtjYN5rNQtvTSa2qF7AJJXp1wPD8M8hL8dLCMivhZHRv9BkAacCij5kpgJfZ-t9zb2GV_ZI37fQksKA7vh3a6d097b4xEjg4pDAsi2V_QwZUtpRlnYbac3kLAT6_Myr-LguY8TmOfnITlEw7-pl27ggkTTcloQm6YOTs1hq_pXaz8X5jU1Q3ykuJ47B4xoBeds0VhWLJLCtdLveUMU5nD6dczOp0ANnXCXakopp8VoI4zQ7kJe2G-4V7XkQVT53kr318OA5AKSyW9uKN0DWCsD78dK4qp-4yZCYgIADvBAsWGNbKKBxuBmsK40i3u8DHnUFspPXqqRzwPg5ZT9KTTCY8vA6HCj4Y0")
 	opts.SetAutoReconnect(true)
 	opts.SetConnectionLostHandler(func(client mqtt.Client, err error) {
 		connect(client)

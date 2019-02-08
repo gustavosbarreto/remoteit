@@ -3,7 +3,8 @@ RUN apk add --update git && \
     go get golang.org/x/crypto/ssh && \
     go get golang.org/x/net/websocket && \
     go get github.com/gorilla/websocket && \
-    go get github.com/labstack/echo
+    go get github.com/labstack/echo && \
+    go get github.com/alash3al/go-pubsub
 ADD . /src
 RUN cd /src && go build -o log-ws
 
