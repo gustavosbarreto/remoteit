@@ -40,6 +40,7 @@ func main() {
 	sshServer := viper.GetString("SSH_SERVER")
 	sshPort := viper.GetString("SSH_PORT")
 	privateKey := viper.GetString("PRIVATE_KEY")
+	authToken := viper.GetString("AUTH_TOKEN")
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
@@ -117,15 +118,12 @@ func main() {
 
 			l.Level = levels[journal.Priority(level)]
 
-			fmt.Println("ante")
 			request := gorequest.New()
 			_, _, errs := request.Post(fmt.Sprintf("http://%s/log/log", sshServer)).Send(l).End()
 			if len(errs) > 0 {
-				fmt.Println(errs)
 				j.Previous()
 				continue
 			}
-			fmt.Println("mando")
 
 			state.Timestamp = l.Timestamp
 
@@ -146,7 +144,7 @@ func main() {
 
 	opts := mqtt.NewClientOptions().AddBroker(fmt.Sprintf("tcp://%s", mqttServer))
 	opts.SetUsername(deviceID)
-	opts.SetPassword("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJcdTAwMGZcdWZmZmR2XHVmZmZkNVx1ZmZmZDosdSBcdTAwMDJcdTAwMTZoXHVmZmZkXG5cdWZmZmQvdFx1ZmZmZF9cdWZmZmTOrFx1MDAwY0ZcdWZmZmRBXHVmZmZkXHVmZmZkV1x1ZmZmZFx1ZmZmZCJ9.bGYYDBUomMVLjlPerdWq6KZIWPTssxm989jMnQx27zN2Z4vz1lXV_82YeARwxmHvyEg9C96sMgRVogftDA9m0zc0Hj3ozdVBq-bFBYbrDDwYlsxtL9l7OS8lBrPAMF2UWMB8aomNw3rnuSikfKtk2IVDo9tRQxGw4_J-xywa8GkZ1gjB6gwlS-rBv9liNGtcIDrmmfZ6rI5GMBLEFFh9m_2J1dlQ_EISpsc-TynrcnmrO_3stlP37SMk4JwUzZEQQRzuYGpoAlx8Xounf38O01UGgjkcyPg0Gf2ihxffIgCnd3Hs0WEPNIdHh6y-SJ81kx9D9-FLRwgtjYN5rNQtvTSa2qF7AJJXp1wPD8M8hL8dLCMivhZHRv9BkAacCij5kpgJfZ-t9zb2GV_ZI37fQksKA7vh3a6d097b4xEjg4pDAsi2V_QwZUtpRlnYbac3kLAT6_Myr-LguY8TmOfnITlEw7-pl27ggkTTcloQm6YOTs1hq_pXaz8X5jU1Q3ykuJ47B4xoBeds0VhWLJLCtdLveUMU5nD6dczOp0ANnXCXakopp8VoI4zQ7kJe2G-4V7XkQVT53kr318OA5AKSyW9uKN0DWCsD78dK4qp-4yZCYgIADvBAsWGNbKKBxuBmsK40i3u8DHnUFspPXqqRzwPg5ZT9KTTCY8vA6HCj4Y0")
+	opts.SetPassword(authToken)
 	opts.SetAutoReconnect(true)
 	opts.SetConnectionLostHandler(func(client mqtt.Client, err error) {
 		connect(client)
