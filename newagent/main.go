@@ -47,10 +47,10 @@ func main() {
 		panic(err)
 	}
 
-	go l.Watch()
+	logWatcher := l.Watch()
 
 	for {
-		_ = <-l.Channel()
-		//fmt.Println(e)
+		e := <-logWatcher
+		fmt.Println(e)
 	}
 }

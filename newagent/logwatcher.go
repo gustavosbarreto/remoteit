@@ -37,7 +37,16 @@ func NewLogWatcher() (*LogWatcher, error) {
 	return l, nil
 }
 
-func (l *LogWatcher) Watch() {
+func (l *LogWatcher) Watch() <-chan *LogEntry {
+	go l.watchLoop()
+	return l.ch
+}
+
+func (l *LogWatcher) watchLoop() {
+	defer func() {
+		l.journal.Close()
+	}()
+
 	for {
 		n, err := l.journal.Next()
 		if err != nil && err != io.EOF {
@@ -83,8 +92,4 @@ func (l *LogWatcher) Watch() {
 			Level:     levels[journal.Priority(level)],
 		}
 	}
-}
-
-func (l *LogWatcher) Channel() chan *LogEntry {
-	return l.ch
 }
