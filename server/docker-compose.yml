@@ -1,7 +1,9 @@
-version: '3.6'
+version: '3.7'
 services:
-  server:
+  ssh-server:
     build: ssh-server
+    environment:
+      - SSH_SERVER_PRIV_KEY_PATH=/etc/ssh-server.key
     depends_on:
       - emq
     links:
@@ -37,11 +39,11 @@ services:
   web:
     build: web
     depends_on:
-      - server
+      - ssh-server
   api:
-    build:
-      context: ./
-      dockerfile: ./api/Dockerfile
+    environment:
+      - API_PRIV_KEY_PATH=/etc/api.priv
+      - API_PUB_KEY_PATH=/etc/api.pub
     depends_on:
       - mongo
     links:
@@ -49,9 +51,9 @@ services:
   term:
     build: term-ws
     depends_on:
-      - server
+      - ssh-server
     links:
-      - server
+      - ssh-server
   log:
     build: log-ws
   ui:

@@ -1,0 +1,40 @@
+hash: 2101359475a3c320b343aa8fb42949cbd547b528eac0d246220585b6e3ab7b76
+updated: 2019-03-19T10:17:17.581036012-03:00
+imports:
+- name: github.com/anmitsu/go-shlex
+  version: 648efa622239a2f6ff949fed78ee37b48d499ba4
+- name: github.com/eclipse/paho.mqtt.golang
+  version: 36d01c2b4cbeb3d2a12063e4880ce30800af9560
+  subpackages:
+  - packets
+- name: github.com/gliderlabs/ssh
+  version: 4b72c663cfb315ecfb9f6be5c106c0c693ce196b
+- name: github.com/konsorten/go-windows-terminal-sequences
+  version: f55edac94c9bbba5d6182a4be46d86a2c9b5b50e
+- name: github.com/satori/go.uuid
+  version: f58768cc1a7a7e77a3bd49e98cdd21419399b6a3
+- name: github.com/Sirupsen/logrus
+  version: dae0fa8d5b0c810a8ab733fbd5510c7cae84eca4
+- name: golang.org/x/crypto
+  version: 8dd112bcdc25174059e45e07517d9fc663123347
+  subpackages:
+  - curve25519
+  - ed25519
+  - ed25519/internal/edwards25519
+  - internal/chacha20
+  - internal/subtle
+  - poly1305
+  - ssh
+  - ssh/terminal
+- name: golang.org/x/net
+  version: 92b859f39abd2d91a854c9f9c4621b2f5054a92d
+  subpackages:
+  - proxy
+  - websocket
+- name: golang.org/x/sys
+  version: a34e9553db1e492c9a76e60db2296ae7e5fbb772
+  subpackages:
+  - cpu
+  - unix
+  - windows
+testImports: []

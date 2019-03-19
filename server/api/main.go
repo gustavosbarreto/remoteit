@@ -7,6 +7,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/cnf/structhash"
@@ -102,7 +103,7 @@ func main() {
 		panic(err)
 	}
 
-	signBytes, err := ioutil.ReadFile("key.pem")
+	signBytes, err := ioutil.ReadFile(os.Getenv("API_PRIV_KEY_PATH"))
 	if err != nil {
 		panic(err)
 	}
@@ -112,7 +113,7 @@ func main() {
 		panic(err)
 	}
 
-	verifyBytes, err := ioutil.ReadFile("key.pub")
+	verifyBytes, err := ioutil.ReadFile(os.Getenv("API_PUB_KEY_PATH"))
 	if err != nil {
 		panic(err)
 	}

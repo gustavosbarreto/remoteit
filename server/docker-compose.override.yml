@@ -1,0 +1,18 @@
+version: '3.7'
+
+services:
+  ssh-server:
+    build:
+      context: ssh-server
+      target: development
+    volumes:
+      - ./ssh-server:/src
+      - ./generated-keys/ssh-server.key:/etc/ssh-server.key
+  api:
+    build:
+      context: api
+      target: development
+    volumes:
+      - ./api:/go/src/github.com/gustavosbarreto/remoteit/server/api
+      - ./generated-keys/api.priv:/etc/api.priv
+      - ./generated-keys/api.pub:/etc/api.pub

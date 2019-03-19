@@ -1,23 +1,30 @@
-FROM golang:alpine AS build
+FROM golang:alpine AS builder
 
 RUN apk add --update git && \
-    go get github.com/cnf/structhash && \
-    go get github.com/dgrijalva/jwt-go && \
-    go get github.com/labstack/echo && \
-    go get gopkg.in/mgo.v2 && \
-    go get github.com/mongodb/mongo-go-driver/bson
+  go get -u github.com/golang/dep/...
 
-ADD api /src
+WORKDIR /go/src/github.com/gustavosbarreto/remoteit/server/api
+ADD . /go/src/github.com/gustavosbarreto/remoteit/server/api
 
-RUN cd /src && go build -o api-server
+RUN dep ensure && go build -o api-server
 
-FROM alpine:3.7
+FROM builder AS development
+
+COPY --from=builder \
+     /go/src/github.com/gustavosbarreto/remoteit/server/api/api-server \
+     /go/src/github.com/gustavosbarreto/remoteit/server/api/api-server
+
+RUN go get github.com/markbates/refresh
+
+COPY --from=builder \
+     /go/src/github.com/gustavosbarreto/remoteit/server/api/vendor /go/src/
+
+ENTRYPOINT ["refresh", "run"]
+
+FROM alpine:3.7 AS production
 
 WORKDIR /app
 
-COPY --from=build /src/api-server /app/
-
-ADD api/key.pub /app/key.pub
-ADD api/key.pem /app/key.pem
+COPY --from=build /go/src/github.com/gustavosbarreto/remoteit/server/api/api-server /app/
 
 ENTRYPOINT ./api-server

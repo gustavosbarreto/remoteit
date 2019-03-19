@@ -1,0 +1,15 @@
+[[constraint]]
+  branch = "master"
+  name = "github.com/cnf/structhash"
+
+[[constraint]]
+  name = "github.com/dgrijalva/jwt-go"
+  version = "3.2.0"
+
+[[constraint]]
+  name = "github.com/labstack/echo"
+  version = "3.3.10"
+
+[[constraint]]
+  branch = "v2"
+  name = "gopkg.in/mgo.v2"
