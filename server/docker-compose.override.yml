@@ -16,3 +16,9 @@ services:
       - ./api:/go/src/github.com/gustavosbarreto/remoteit/server/api
       - ./generated-keys/api.priv:/etc/api.priv
       - ./generated-keys/api.pub:/etc/api.pub
+  web:
+    build:
+      context: web
+      target: development
+    volumes:
+      - ./web:/app

@@ -1,12 +1,13 @@
-FROM golang:alpine AS build
-RUN apk add --update git && \
-    go get golang.org/x/crypto/ssh && \
-    go get golang.org/x/net/websocket
-ADD . /src
-RUN cd /src && go build -o web
-
-FROM alpine:3.7
-EXPOSE 80
+FROM node:11.12.0-alpine as builder
 WORKDIR /app
-COPY --from=build /src/ /app/
-ENTRYPOINT ./web
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+FROM builder as development
+RUN npm run serve
+
+FROM nginx:1.13.12-alpine as production
+COPY --from=builder /app/dist /usr/share/nginx/html
+CMD ["nginx", "-g", "daemon off;"]
