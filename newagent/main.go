@@ -11,7 +11,6 @@ import (
 type ConfigOptions struct {
 	DeviceID      string `envconfig:"device_id"`
 	ServerAddress string `envconfig:"server_address"`
-	AuthToken     string `envconfig:"auth_token"`
 	PrivateKey    string `envconfig:"private_key"`
 }
 
@@ -64,9 +63,7 @@ func main() {
 		logrus.WithFields(logrus.Fields{"errs": errs}).Panic("Failed authenticate device")
 	}
 
-	fmt.Println(auth)
-
-	b := NewBroker(endpoints.MQTT, opts.DeviceID, opts.AuthToken)
+	b := NewBroker(endpoints.MQTT, opts.DeviceID, auth.Token)
 
 	b.Connect()
 
