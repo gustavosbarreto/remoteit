@@ -1,0 +1,11 @@
+language: minimal
+65;5403;1c
+jobs:
+  include:
+    - stage: build docker images
+      script:
+      - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+      - docker build -t gustavosbarreto/remoteit-web ./server/web
+      - docker build -t gustavosbarreto/remoteit-web:$TRAVIS_COMMIT ./server/web
+      - docker push gustavosbarreto/remoteit-web
+      - docker push gustavosbarreto/remoteit-web:$TRAVIS_COMMIT
