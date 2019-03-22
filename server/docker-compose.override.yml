@@ -23,3 +23,8 @@ services:
     volumes:
       - ./web:/app
       - /app/node_modules
+  mock-api:
+    build:
+      context: mock-api
+    volumes:
+      - ./mock-api:/src
