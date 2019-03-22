@@ -6,7 +6,8 @@ COPY . .
 RUN npm run build
 
 FROM builder as development
-RUN npm run serve
+WORKDIR /app
+CMD ["npm", "run", "serve"]
 
 FROM nginx:1.13.12-alpine as production
 COPY --from=builder /app/dist /usr/share/nginx/html
