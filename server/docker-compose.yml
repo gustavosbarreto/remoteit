@@ -15,8 +15,8 @@ services:
     environment:
      - EMQ_NAME=emq
      - EMQ_HOST=127.0.0.1
-     - EMQX_LOADED_PLUGINS=emq_dashboard,emq_auth_http,emq_web_hook
-     - EMQX_LOG__CONSOLE__LEVEL=debug
+     - EMQ_LOADED_PLUGINS=emq_dashboard,emq_auth_http,emq_web_hook
+     - EMQ_LOG__CONSOLE__LEVEL=debug
      - EMQ_AUTH__HTTP__AUTH_REQ=http://api:8080/mqtt/auth
      - EMQ_AUTH__HTTP__AUTH_REQ__method=get
      - EMQ_AUTH__HTTP__AUTH_REQ__params=username=%u,password=%P,ipaddr=%a
