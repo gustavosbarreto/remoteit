@@ -184,7 +184,7 @@ func main() {
 	e.GET("/devices", func(c echo.Context) error {
 		db := c.Get("db").(*mgo.Database)
 
-		var devices []Device
+		devices := make([]Device, 0)
 		if err := db.C("devices").Find(bson.M{}).All(&devices); err != nil {
 			return err
 		}
