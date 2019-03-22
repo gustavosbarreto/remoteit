@@ -4,7 +4,6 @@ import (
 	"crypto/rsa"
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -18,26 +17,10 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-type AuthRequest struct {
-	GrantType string `json:"grant_type" `
-	UserGrantData
-	DeviceGrantData
-}
-
-type UserGrantData struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type DeviceGrantData struct {
+type DeviceAuthRequest struct {
 	Identity  map[string]string `json:"identity"`
 	PublicKey string            `json:"public_key"`
 }
-
-const (
-	UserGrantType   = "user"
-	DeviceGrantType = "device"
-)
 
 type Device struct {
 	ID        bson.ObjectId     `json:"-" bson:"_id,omitempty"`
@@ -135,31 +118,22 @@ func main() {
 		}
 	})
 
-	e.POST("/auth", func(c echo.Context) error {
+	e.POST("/devices/auth", func(c echo.Context) error {
 		db := c.Get("db").(*mgo.Database)
 
-		var req AuthRequest
+		var req DeviceAuthRequest
 
 		err := c.Bind(&req)
 		if err != nil {
 			return err
 		}
 
-		switch req.GrantType {
-		case UserGrantType:
-			// TODO: not implemented yet
-			return errors.New("not implemented yet")
-		case DeviceGrantType:
-		default:
-			return err
-		}
-
-		uid := sha256.Sum256(structhash.Dump(req.DeviceGrantData, 1))
+		uid := sha256.Sum256(structhash.Dump(req, 1))
 
 		d := &Device{
 			UID:       hex.EncodeToString(uid[:]),
-			Identity:  req.DeviceGrantData.Identity,
-			PublicKey: req.DeviceGrantData.PublicKey,
+			Identity:  req.Identity,
+			PublicKey: req.PublicKey,
 		}
 
 		if err := db.C("devices").Insert(&d); err != nil && !mgo.IsDup(err) {
