@@ -1,0 +1,71 @@
+version: '3.7'
+services:
+  ssh-server:
+    build: ssh-server
+    environment:
+      - SSH_SERVER_PRIV_KEY_PATH=/etc/ssh-server.key
+    depends_on:
+      - emq
+    links:
+      - emq
+    ports:
+      - "2222:2222"
+  emq:
+    build: git://github.com/emqtt/emq-docker
+    environment:
+     - EMQ_NAME=emq
+     - EMQ_HOST=127.0.0.1
+     - EMQX_LOADED_PLUGINS=emq_dashboard,emq_auth_http,emq_web_hook
+     - EMQX_LOG__CONSOLE__LEVEL=debug
+     - EMQ_AUTH__HTTP__AUTH_REQ=http://api:8080/mqtt/auth
+     - EMQ_AUTH__HTTP__AUTH_REQ__method=get
+     - EMQ_AUTH__HTTP__AUTH_REQ__params=username=%u,password=%P,ipaddr=%a
+     - EMQ_AUTH__HTTP__ACL_REQ=http://api:8080/mqtt/acl
+     - EMQ_AUTH__HTTP__ACL_REQ__METHOD=get
+     - EMQ_AUTH__HTTP__ACL_REQ__PARAMS=access=%A,username=%u,topic=%t,ipaddr=%a
+     - EMQ_AUTH__HTTP__ACL_NOMATCH=deny
+     - EMQ_WEB__HOOK__API__URL=http://api:8080/mqtt/webhook
+    links:
+      - api
+    ports:
+    - target: 1883
+      published: 1883
+      protocol: tcp
+      mode: host
+    - target: 18083
+      published: 18083
+      protocol: tcp
+      mode: host
+  web:
+    build: web
+    depends_on:
+      - ssh-server
+  api:
+    environment:
+      - API_PRIV_KEY_PATH=/etc/api.priv
+      - API_PUB_KEY_PATH=/etc/api.pub
+    depends_on:
+      - mongo
+    links:
+      - mongo
+  term:
+    build: term-ws
+    depends_on:
+      - ssh-server
+    links:
+      - ssh-server
+  log:
+    build: log-ws
+  ui:
+    build: ui
+  gateway:
+    build: gateway
+    command: [nginx-debug, '-g', 'daemon off;']
+    depends_on:
+      - api
+      - ui
+      - term
+    ports:
+      - '80:80'
+  mongo:
+    image: mongo:3.4.19
