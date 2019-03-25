@@ -170,5 +170,16 @@ func main() {
 	e.GET("/mqtt/acl", AuthorizeMqttClient)
 	e.POST("/mqtt/webhook", ProcessMqttEvent)
 
+	e.GET("/users", func(c echo.Context) error {
+		db := c.Get("db").(*mgo.Database)
+
+		users := make([]Device, 0)
+		if err := db.C("users").Find(bson.M{}).All(&users); err != nil {
+			return err
+		}
+
+		return c.JSON(http.StatusOK, users)
+	})
+
 	e.Logger.Fatal(e.Start(":8080"))
 }
