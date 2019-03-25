@@ -3,7 +3,11 @@
     <v-container grid-list-xl fluid>
       <v-layout row wrap>
         <v-flex sm12>
-          <h1>Devices</h1>
+          <v-layout row>
+            <v-flex grow>
+              <h1>Devices</h1>
+            </v-flex>
+          </v-layout>
         </v-flex>
         <v-flex lg12>
           <v-data-table :headers="headers" :items="devices" hide-actions="true" class="elevation-1">
