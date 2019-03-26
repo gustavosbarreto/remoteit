@@ -65,6 +65,7 @@ services:
       - api
       - ui
       - term
+      - web
     ports:
       - '80:80'
   mongo:
