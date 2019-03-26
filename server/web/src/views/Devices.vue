@@ -5,7 +5,7 @@
         <v-flex sm12>
           <v-layout row>
             <v-flex grow>
-              <h1>Devices</h1>
+              <h1>Device Fleet</h1>
             </v-flex>
           </v-layout>
         </v-flex>

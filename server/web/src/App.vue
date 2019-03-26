@@ -54,12 +54,12 @@ export default {
         },
         {
           icon: "devices",
-          title: "Devices",
+          title: "Device Fleet",
           path: "/devices"
         },
         {
           icon: "people",
-          title: "Users",
+          title: "User List",
           path: "/users"
         }
       ]

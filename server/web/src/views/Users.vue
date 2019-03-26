@@ -5,7 +5,7 @@
         <v-flex sm12>
           <v-layout row>
             <v-flex grow>
-              <h1>Users</h1>
+              <h1>User List</h1>
             </v-flex>
             <v-flex shrink>
               <v-btn fab small color="primary">
