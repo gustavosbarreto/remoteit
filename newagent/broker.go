@@ -42,6 +42,7 @@ func NewBroker(address, username, password string) *Broker {
 	})
 
 	b.client = mqtt.NewClient(opts)
+	b.subscribers = make(map[string]Subscriber)
 
 	return b
 }

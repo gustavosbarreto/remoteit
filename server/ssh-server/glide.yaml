@@ -11,3 +11,5 @@ import:
 - package: golang.org/x/crypto
   subpackages:
   - ssh
+- package: github.com/parnurzeal/gorequest
+  version: ^0.2.15

@@ -1,15 +1,20 @@
 package main
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha512"
 	"fmt"
 	"io"
 	"net"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/Sirupsen/logrus"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	sshserver "github.com/gliderlabs/ssh"
+	"github.com/parnurzeal/gorequest"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -31,6 +36,7 @@ func NewServer(opts *Options) *Server {
 	s.sshd = &sshserver.Server{
 		Addr: opts.Addr,
 		PasswordHandler: func(ctx sshserver.Context, pass string) bool {
+			fmt.Println("passwordhandler")
 			return true
 		},
 		PublicKeyHandler: s.publicKeyHandler,
@@ -119,6 +125,19 @@ func (s *Server) sessionHandler(session sshserver.Session) {
 
 	s.forwarding[sess.port] = fmt.Sprintf("%d:%s", sess.port, fwid.String())
 
+	var device struct {
+		PublicKey string `json:"public_key"`
+	}
+
+	_, _, errs := gorequest.New().Get(fmt.Sprintf("http://api:8080/devices/%s", sess.target)).EndStruct(&device)
+	if len(errs) > 0 {
+		logrus.WithFields(logrus.Fields{
+			"err": err,
+		}).Error("Failed to get device public key")
+		session.Close()
+		return
+	}
+
 	s.publish("connect", sess.target, fmt.Sprintf("%d:%s", sess.port, fwid.String()))
 
 	select {
@@ -189,6 +208,20 @@ func (s *Server) connectToBroker() {
 }
 
 func (s *Server) publicKeyHandler(ctx sshserver.Context, key sshserver.PublicKey) bool {
+	fmt.Println("publickeyhandler")
+
+	if strings.Contains(ctx.User(), "@") {
+		fmt.Println("eh user")
+		return true
+	}
+
+	parts := strings.SplitN(ctx.User(), ":", 2)
+	if len(parts) < 2 {
+		return false
+	}
+
+	fmt.Println(parts)
+
 	return true
 }
 
@@ -266,4 +299,15 @@ func (s *Server) ListenAndServe() error {
 	}).Info("SSH server listening")
 
 	return s.sshd.ListenAndServe()
+}
+
+func encodeMessage(msg []byte, pub *rsa.PublicKey) ([]byte, error) {
+	hash := sha512.New()
+
+	encrypted, err := rsa.EncryptOAEP(hash, rand.Reader, pub, msg, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return encrypted, nil
 }

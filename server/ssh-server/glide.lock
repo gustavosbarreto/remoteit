@@ -1,5 +1,5 @@
-hash: 2101359475a3c320b343aa8fb42949cbd547b528eac0d246220585b6e3ab7b76
-updated: 2019-03-19T10:17:17.581036012-03:00
+hash: 3360372e73147911b744639b4e408e2b0ffa03ae6350ab194e98263965c407d5
+updated: 2019-03-27T21:13:09.281748465-03:00
 imports:
 - name: github.com/anmitsu/go-shlex
   version: 648efa622239a2f6ff949fed78ee37b48d499ba4
@@ -11,12 +11,14 @@ imports:
   version: 4b72c663cfb315ecfb9f6be5c106c0c693ce196b
 - name: github.com/konsorten/go-windows-terminal-sequences
   version: f55edac94c9bbba5d6182a4be46d86a2c9b5b50e
+- name: github.com/parnurzeal/gorequest
+  version: a578a48e8d6ca8b01a3b18314c43c6716bb5f5a3
 - name: github.com/satori/go.uuid
   version: f58768cc1a7a7e77a3bd49e98cdd21419399b6a3
 - name: github.com/Sirupsen/logrus
   version: dae0fa8d5b0c810a8ab733fbd5510c7cae84eca4
 - name: golang.org/x/crypto
-  version: 8dd112bcdc25174059e45e07517d9fc663123347
+  version: a5d413f7728c81fb97d96a2b722368945f651e78
   subpackages:
   - curve25519
   - ed25519
@@ -27,12 +29,13 @@ imports:
   - ssh
   - ssh/terminal
 - name: golang.org/x/net
-  version: 92b859f39abd2d91a854c9f9c4621b2f5054a92d
+  version: 63eda1eb0650888965ead1296efd04d0b2b61128
   subpackages:
+  - internal/socks
   - proxy
   - websocket
 - name: golang.org/x/sys
-  version: a34e9553db1e492c9a76e60db2296ae7e5fbb772
+  version: f49334f85ddcf0f08d7fb6dd7363e9e6d6b777eb
   subpackages:
   - cpu
   - unix

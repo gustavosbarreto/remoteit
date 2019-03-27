@@ -5,7 +5,8 @@ RUN apk add --update git && \
     go get github.com/eclipse/paho.mqtt.golang && \
     go get github.com/gliderlabs/ssh && \
     go get github.com/Sirupsen/logrus && \
-    go get github.com/satori/go.uuid
+    go get github.com/satori/go.uuid && \
+    go get github.com/parnurzeal/gorequest
 
 ADD . /src
 RUN cd /src && glide install && go build -o ssh-server

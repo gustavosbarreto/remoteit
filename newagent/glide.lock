@@ -1,63 +1,83 @@
-hash: 9a0f95ff692049883cd8af5decfa1df68fd033b79aa4b40e54f52f98f9ec0be0
-updated: 2018-06-19T10:12:22.793365687-03:00
+hash: d085f9bcabcab7f3e2706471cad6e8a5f847be875ed58acbeebdf39fb3881104
+updated: 2019-03-27T20:31:06.778723068-03:00
 imports:
+- name: github.com/anmitsu/go-shlex
+  version: 648efa622239a2f6ff949fed78ee37b48d499ba4
+- name: github.com/coreos/go-systemd
+  version: 95778dfbb74eb7e4dbaf43bf7d71809650ef8076
+  subpackages:
+  - journal
+  - sdjournal
+- name: github.com/coreos/pkg
+  version: 399ea9e2e55f791b6e3d920860dbecb99c3692f0
+  subpackages:
+  - dlopen
 - name: github.com/eclipse/paho.mqtt.golang
   version: 36d01c2b4cbeb3d2a12063e4880ce30800af9560
   subpackages:
   - packets
-- name: github.com/fsnotify/fsnotify
-  version: c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9
-- name: github.com/hashicorp/hcl
-  version: ef8a98b0bbce4a65b5aa4c368430a80ddc533168
+- name: github.com/ghodss/yaml
+  version: 25d852aebe32c875e9c044af3eef9c7dc6bc777f
+- name: github.com/gliderlabs/ssh
+  version: 4b72c663cfb315ecfb9f6be5c106c0c693ce196b
+- name: github.com/go-ole/go-ole
+  version: 97b6244175ae18ea6eef668034fd6565847501c9
   subpackages:
-  - hcl/ast
-  - hcl/parser
-  - hcl/printer
-  - hcl/scanner
-  - hcl/strconv
-  - hcl/token
-  - json/parser
-  - json/scanner
-  - json/token
-- name: github.com/inconshreveable/mousetrap
-  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
-- name: github.com/magiconair/properties
-  version: 2c9e9502788518c97fe44e8955cd069417ee89df
-- name: github.com/mattn/go-shellwords
-  version: 39dbbfa24bbc39559b61cae9b20b0e8db0e55525
-- name: github.com/mitchellh/mapstructure
-  version: 00c29f56e2386353d58c599509e8dc3801b0d716
-- name: github.com/pelletier/go-toml
-  version: 66540cf1fcd2c3aee6f6787dfa32a6ae9a870f12
-- name: github.com/spf13/afero
-  version: 63644898a8da0bc22138abf860edaf5277b6102e
+  - oleutil
+- name: github.com/jaypipes/ghw
+  version: 032dfb1f8cb2b9b5c0e894855833e23ff1fe24a9
+- name: github.com/jaypipes/pcidb
+  version: adf5a9192458392195b34ec0677172bd69e95b82
+- name: github.com/kelseyhightower/envconfig
+  version: f611eb38b3875cc3bd991ca91c51d06446afa14c
+- name: github.com/konsorten/go-windows-terminal-sequences
+  version: f55edac94c9bbba5d6182a4be46d86a2c9b5b50e
+- name: github.com/kr/pty
+  version: 521317be5ebc228a0f0ede099fa2a0b5ece22e49
+- name: github.com/mitchellh/go-homedir
+  version: af06845cf3004701891bf4fdb884bfe4920b3727
+- name: github.com/moul/http2curl
+  version: faeffb3553568c6ecaa9c103c09dea941ca9c570
+- name: github.com/parnurzeal/gorequest
+  version: a578a48e8d6ca8b01a3b18314c43c6716bb5f5a3
+- name: github.com/pkg/errors
+  version: ba968bfe8b2f7e042a574c888954fccecfa385b4
+- name: github.com/shirou/gopsutil
+  version: 6c6abd6d1666d6b27f1c261e0f850441ba22aa3a
   subpackages:
+  - cpu
+  - internal/common
   - mem
-- name: github.com/spf13/cast
-  version: 8965335b8c7107321228e3e3702cab9832751bac
-- name: github.com/spf13/cobra
-  version: ef82de70bb3f60c65fb8eebacbb2d122ef517385
-- name: github.com/spf13/jwalterweatherman
-  version: 7c0cea34c8ece3fbeb2b27ab9b59511d360fb394
-- name: github.com/spf13/pflag
-  version: 583c0c0531f06d5278b7d917446061adc344b5cd
-- name: github.com/spf13/viper
-  version: 8dc2790b029dc41e2b8ff772c63c26adbb1db70d
+- name: github.com/sirupsen/logrus
+  version: dae0fa8d5b0c810a8ab733fbd5510c7cae84eca4
+- name: github.com/StackExchange/wmi
+  version: e0a55b97c70558c92ce14085e41b35a894e93d3d
+- name: golang.org/x/crypto
+  version: a5d413f7728c81fb97d96a2b722368945f651e78
+  subpackages:
+  - curve25519
+  - ed25519
+  - ed25519/internal/edwards25519
+  - internal/chacha20
+  - internal/subtle
+  - poly1305
+  - ssh
+  - ssh/terminal
 - name: golang.org/x/net
-  version: 5f9ae10d9af5b1c89ae6904293b14b064d4ada23
+  version: 63eda1eb0650888965ead1296efd04d0b2b61128
   subpackages:
   - internal/socks
   - proxy
+  - publicsuffix
   - websocket
 - name: golang.org/x/sys
-  version: 79b0c6888797020a994db17c8510466c72fe75d9
+  version: f49334f85ddcf0f08d7fb6dd7363e9e6d6b777eb
   subpackages:
+  - cpu
   - unix
-- name: golang.org/x/text
-  version: 7922cc490dd5a7dbaa7fd5d6196b49db59ac042f
-  subpackages:
-  - transform
-  - unicode/norm
+  - windows
 - name: gopkg.in/yaml.v2
-  version: 5420a8b6744d3b0345ab293f6fcba19c978f1183
+  version: 51d6538a90f86fe93ac480b35f37b2be17fef232
+- name: howett.net/plist
+  version: 591f970eefbbeb04d7b37f334a0c4c3256e32876
 testImports: []

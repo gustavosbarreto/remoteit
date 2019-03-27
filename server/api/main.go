@@ -166,6 +166,17 @@ func main() {
 		return c.JSON(http.StatusOK, devices)
 	})
 
+	e.GET("/devices/:uid", func(c echo.Context) error {
+		db := c.Get("db").(*mgo.Database)
+
+		device := new(Device)
+		if err := db.C("devices").Find(bson.M{"uid": c.Param("uid")}).One(&device); err != nil {
+			return err
+		}
+
+		return c.JSON(http.StatusOK, device)
+	})
+
 	e.GET("/mqtt/auth", AuthenticateMqttClient)
 	e.GET("/mqtt/acl", AuthorizeMqttClient)
 	e.POST("/mqtt/webhook", ProcessMqttEvent)

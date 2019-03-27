@@ -1,10 +1,16 @@
 package main
 
 import (
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
+	"io/ioutil"
+	"net"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/parnurzeal/gorequest"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -53,17 +59,39 @@ func main() {
 		logrus.Fatal(err)
 	}
 
+	pubKey, err := readPublicKey(opts.PrivateKey)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
 	var auth AuthResponse
+
 	_, _, errs = gorequest.New().Post(endpoints.buildAPIUrl("/devices/auth")).Send(&AuthRequest{
-		Identity:  identity,
-		PublicKey: "testing",
+		Identity: identity,
+		PublicKey: string(pem.EncodeToMemory(&pem.Block{
+			Type:  "RSA PUBLIC KEY",
+			Bytes: x509.MarshalPKCS1PublicKey(pubKey),
+		})),
 	}).EndStruct(&auth)
 	if len(errs) > 0 {
 		logrus.WithFields(logrus.Fields{"errs": errs}).Panic("Failed authenticate device")
 	}
 
+	freePort, err := getFreePort()
+	if err != nil {
+		logrus.Fatal(errors.Wrap(err, "failed to get free port"))
+	}
+
+	server := NewSSHServer(freePort)
+	client := NewSSHClient(opts.PrivateKey, endpoints.SSH, freePort)
+
+	go func() {
+		logrus.Fatal(server.ListenAndServe())
+	}()
+
 	b := NewBroker(endpoints.MQTT, auth.UID, auth.Token)
 
+	b.Subscribe(fmt.Sprintf("connect/%s", auth.UID), client.connect)
 	b.Connect()
 
 	l, err := NewLogWatcher()
@@ -78,4 +106,37 @@ func main() {
 		//		e := <-logWatcher
 		//		fmt.Println(e)
 	}
+}
+
+func getFreePort() (int, error) {
+	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
+	if err != nil {
+		return 0, err
+	}
+
+	l, err := net.ListenTCP("tcp", addr)
+	if err != nil {
+		return 0, err
+	}
+	defer l.Close()
+	return l.Addr().(*net.TCPAddr).Port, nil
+}
+
+func readPublicKey(path string) (*rsa.PublicKey, error) {
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	block, _ := pem.Decode(data)
+	if block == nil {
+		return nil, errors.New("Failed to decode PEM")
+	}
+
+	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return &key.PublicKey, nil
 }
